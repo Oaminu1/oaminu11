@@ -2,5 +2,9 @@
     "cep": 0,
     "ter": 40,
     "dee": 20,
-    "mon": 20
+    "mon": 20,
+    "PlayerName": 100,
+    "blog": 3,
+    "moimoo": 30,
+    "Esenwanne": 40
 }

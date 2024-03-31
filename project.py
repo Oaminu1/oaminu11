@@ -2,31 +2,13 @@
 
 '''Description: The script creates an interactive educational game with persistent leaderboard storage.'''
 
+import tkinter as tk
+from tkinter import messagebox
 import random
 import json
 
 # Path to the leaderboard file
 LEADERBOARD_FILE = "leaderboard.json"
-
-# Load existing leaderboard data from a file
-def load_leaderboard():
-    try:
-        with open(LEADERBOARD_FILE, "r") as file:
-            return json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-# Save the leaderboard data to a file
-def save_leaderboard(leaderboard):
-    with open(LEADERBOARD_FILE, "w") as file:
-        json.dump(leaderboard, file, indent=4)
-
-# Display the top players from the leaderboard
-def display_leaderboard(leaderboard):
-    print("\nLeaderboard:")
-    sorted_leaderboard = sorted(leaderboard.items(), key=lambda x: x[1], reverse=True)
-    for i, (player, score) in enumerate(sorted_leaderboard[:5], 1):
-        print(f"{i}. {player}: {score} points")
 
 #dictionary of quiz questions
 quiz_questions = {
@@ -101,15 +83,32 @@ quiz_questions = {
          }
     }
 
-def start_quiz():
+# Load existing leaderboard data from a file
+def load_leaderboard():
+    try:
+        with open(LEADERBOARD_FILE, "r") as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+# Save the leaderboard data to a file
+def save_leaderboard(leaderboard):
+    with open(LEADERBOARD_FILE, "w") as file:
+        json.dump(leaderboard, file, indent=4)
+
+def display_leaderboard_console(leaderboard):
+    # This function can remain as your console-based leaderboard display
+    # or you can remove it if you decide to only use the GUI display.
+    print("\nLeaderboard:")
+    sorted_leaderboard = sorted(leaderboard.items(), key=lambda x: x[1], reverse=True)
+    for i, (player, score) in enumerate(sorted_leaderboard[:5], 1):
+        print(f"{i}. {player}: {score} points")
+
+def play_quiz():
     print("Welcome to the Quiz Game!")
     name = input("Please enter your name: ")
     print(f"Hello, {name}! Let's get started.")
-
-    # Load the leaderboard from file
-    leaderboard = load_leaderboard()
-
-    # Select a quiz category
+     # Select a quiz category
     print("\nSelect a quiz category:")
     print("1. Science")
     print("2. Countries")
@@ -129,7 +128,7 @@ def start_quiz():
     score = 0
     lives = 2
 
-    # Retrieve and shuffle questions for the selected category
+# Retrieve and shuffle questions for the selected category
     questions = quiz_questions[selected_category]
     question_keys = list(questions.keys())
     random.shuffle(question_keys)
@@ -161,16 +160,34 @@ def start_quiz():
         print("Game over! You ran out of lives.\nRun the code to try again.")
 
     print(f"\nYour final score is: {score}")
+    return name, score
 
-    # Update and save the leaderboard
-    if name in leaderboard:
-        leaderboard[name] = max(leaderboard[name], score)
-    else:
-        leaderboard[name] = score
-    save_leaderboard(leaderboard)
 
-    display_leaderboard(leaderboard)
+def display_leaderboard_gui(leaderboard):
+    root = tk.Tk()
+    root.title("Leaderboard")
+
+    tk.Label(root, text="Leaderboard", font=("Arial", 16)).pack(pady=10)
+    sorted_leaderboard = sorted(leaderboard.items(), key=lambda x: x[1], reverse=True)
+    for i, (player, score) in enumerate(sorted_leaderboard[:5], 1):
+        tk.Label(root, text=f"{i}. {player}: {score} points", font=("Arial", 14)).pack()
+
+    tk.Button(root, text="Close", command=root.destroy).pack(pady=20)
+
+    root.mainloop()
 
 if __name__ == "__main__":
-    start_quiz()
+    leaderboard = load_leaderboard()
 
+    # This is now correctly expecting two return values.
+    name, player_score = play_quiz()
+
+    # Load the leaderboard again in case it was updated during the game
+    leaderboard = load_leaderboard()
+
+    max_score = leaderboard.get(name, 0)
+    if player_score > max_score:
+        leaderboard[name] = player_score
+        save_leaderboard(leaderboard)
+
+    display_leaderboard_gui(leaderboard)
